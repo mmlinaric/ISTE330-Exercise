@@ -66,46 +66,62 @@ public class Equipment {
     }
 
     // fetch: retrieves database values for the object's equipmentId and updates attributes
-    public boolean fetch() {
-        String sql = "SELECT EquipID, EquipmentName, EquipmentDescription, EquipmentCapacity FROM equipment WHERE EquipID = " + this.equipmentId;
-        ArrayList<ArrayList<String>> result = db.getData(sql);
+    public boolean fetch() throws DLException {
+        try {
+            String sql = "SELECT EquipID, EquipmentName, EquipmentDescription, EquipmentCapacity FROM equipment WHERE EquipID = " + this.equipmentId;
+            ArrayList<ArrayList<String>> result = db.getData(sql);
 
-        if (result.size() < 2) {
-            System.out.println("No equipment found with ID: " + this.equipmentId);
-            return false;
+            if (result.size() < 2) {
+                System.out.println("No equipment found with ID: " + this.equipmentId);
+                return false;
+            }
+
+            ArrayList<String> row = result.get(1);
+            this.equipmentId = Integer.parseInt(row.get(0));
+            this.equipmentName = row.get(1);
+            this.equipmentDescription = row.get(2);
+            this.equipmentCapacity = Integer.parseInt(row.get(3));
+            return true;
+        } catch (Exception e) {
+            throw new DLException(e, "Method: fetch", "EquipID: " + this.equipmentId);
         }
-
-        ArrayList<String> row = result.get(1);
-        this.equipmentId = Integer.parseInt(row.get(0));
-        this.equipmentName = row.get(1);
-        this.equipmentDescription = row.get(2);
-        this.equipmentCapacity = Integer.parseInt(row.get(3));
-        return true;
     }
 
     // put: updates the database row for this equipmentId with current attribute values
-    public boolean put() {
-        String sql = "UPDATE equipment SET EquipmentName = '" + this.equipmentName
-                + "', EquipmentDescription = '" + this.equipmentDescription
-                + "', EquipmentCapacity = " + this.equipmentCapacity
-                + " WHERE EquipID = " + this.equipmentId;
-        return db.setData(sql);
+    public boolean put() throws DLException {
+        try {
+            String sql = "UPDATE equipment SET EquipmentName = '" + this.equipmentName
+                    + "', EquipmentDescription = '" + this.equipmentDescription
+                    + "', EquipmentCapacity = " + this.equipmentCapacity
+                    + " WHERE EquipID = " + this.equipmentId;
+            return db.setData(sql);
+        } catch (Exception e) {
+            throw new DLException(e, "Method: put", "EquipID: " + this.equipmentId);
+        }
     }
 
     // post: inserts a new row into the database using the object's attribute values
-    public boolean post() {
-        String sql = "INSERT INTO equipment (EquipID, EquipmentName, EquipmentDescription, EquipmentCapacity) VALUES ("
-                + this.equipmentId + ", '"
-                + this.equipmentName + "', '"
-                + this.equipmentDescription + "', "
-                + this.equipmentCapacity + ")";
-        return db.setData(sql);
+    public boolean post() throws DLException {
+        try {
+            String sql = "INSERT INTO equipment (EquipID, EquipmentName, EquipmentDescription, EquipmentCapacity) VALUES ("
+                    + this.equipmentId + ", '"
+                    + this.equipmentName + "', '"
+                    + this.equipmentDescription + "', "
+                    + this.equipmentCapacity + ")";
+            return db.setData(sql);
+        } catch (Exception e) {
+            throw new DLException(e, "Method: post", "EquipID: " + this.equipmentId);
+        }
     }
 
     // remove: deletes the database row corresponding to the object's equipmentId
-    public boolean remove() {
-        String sql = "DELETE FROM equipment WHERE EquipID = " + this.equipmentId;
-        return db.setData(sql);
+    public boolean remove() throws DLException {
+        try {
+            String sql = "DELETE FROM equipment WHERE EquipID = " + this.equipmentId;
+            return db.setData(sql);
+        } catch (Exception e) {
+            throw new DLException(e, "Method: remove", "EquipID: " + this.equipmentId);
+        }
     }
 
     // Utility method to display equipment values to the user

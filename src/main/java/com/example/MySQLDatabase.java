@@ -44,18 +44,17 @@ public class MySQLDatabase {
         this.password = password;
     }
 
-    public boolean connect() {
+    public boolean connect() throws DLException {
         try {
             String url = "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database;
             this.connection = DriverManager.getConnection(url, this.user, this.password);
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new DLException(e);
         }
     }
 
-    public boolean close() {
+    public boolean close() throws DLException {
         try {
             if (this.connection != null && !this.connection.isClosed()) {
                 this.connection.close();
@@ -63,12 +62,11 @@ public class MySQLDatabase {
             }
             return false;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new DLException(e);
         }
     }
 
-    public ArrayList<ArrayList<String>> getData(String sql) {
+    public ArrayList<ArrayList<String>> getData(String sql) throws DLException {
         ArrayList<ArrayList<String>> result = new ArrayList<>();
         try {
             PreparedStatement stmt = this.connection.prepareStatement(sql);
@@ -95,20 +93,19 @@ public class MySQLDatabase {
             rs.close();
             stmt.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DLException(e, "Query: " + sql);
         }
         return result;
     }
 
-    public boolean setData(String sql) {
+    public boolean setData(String sql) throws DLException {
         try {
             PreparedStatement stmt = this.connection.prepareStatement(sql);
             stmt.executeUpdate();
             stmt.close();
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new DLException(e, "Query: " + sql);
         }
     }
 }

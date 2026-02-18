@@ -41,6 +41,7 @@ src/main/java/com/example/
   Main.java           - Entry point; tests all Equipment CRUD operations
   MySQLDatabase.java  - Database connection and query methods (getData, setData)
   Equipment.java      - Persistence layer mirroring the equipment table
+  DLException.java    - Custom exception for SQL-related errors
 init/
   travel.sql          - SQL script to initialize the travel23 database
 ```
