@@ -1,5 +1,7 @@
 package com.example;
 
+import java.util.ArrayList;
+
 public class Main {
     public static void main(String[] args) {
         String dbHost = System.getenv("DB_HOST");
@@ -87,6 +89,32 @@ public class Main {
                     System.out.println("Caught expected DLException for Test 8:");
                     System.err.println("[USER MESSAGE] " + e.getMessage());
                 }
+
+                // --- Test 9: New getData with boolean (include headers) ---
+                System.out.println("\n--- Test 9: getData with headers = true ---");
+                ArrayList<ArrayList<String>> dataWithHeaders = db.getData("SELECT * FROM equipment LIMIT 3", true);
+                for (ArrayList<String> row : dataWithHeaders) {
+                    System.out.println(row);
+                }
+
+                // --- Test 10: New getData with boolean (exclude headers) ---
+                System.out.println("\n--- Test 10: getData with headers = false ---");
+                ArrayList<ArrayList<String>> dataNoHeaders = db.getData("SELECT * FROM equipment LIMIT 3", false);
+                for (ArrayList<String> row : dataNoHeaders) {
+                    System.out.println(row);
+                }
+
+                // --- Test 11: printDatabaseInfo ---
+                System.out.println("\n--- Test 11: printDatabaseInfo ---");
+                db.printDatabaseInfo();
+
+                // --- Test 12: printTableInfo ---
+                System.out.println("\n--- Test 12: printTableInfo ---");
+                db.printTableInfo("equipment");
+
+                // --- Test 13: printResultInfo ---
+                System.out.println("\n--- Test 13: printResultInfo ---");
+                db.printResultInfo("SELECT * FROM equipment WHERE EquipmentCapacity > 10");
 
                 if (db.close()) {
                     System.out.println("\nSuccessfully closed the database connection!");
