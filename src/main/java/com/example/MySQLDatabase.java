@@ -212,4 +212,116 @@ public class MySQLDatabase {
             throw new DLException(e, "Query: " + sql);
         }
     }
+
+    /**
+     * Prepares an SQL statement and binds the values.
+     * @param sql The SQL statement string.
+     * @param values The values to bind to the statement.
+     * @return A PreparedStatement object.
+     * @throws DLException if preparation or binding fails.
+     */
+    public PreparedStatement prepare(String sql, ArrayList<String> values) throws DLException {
+        try {
+            PreparedStatement stmt = this.connection.prepareStatement(sql);
+            for (int i = 0; i < values.size(); i++) {
+                stmt.setString(i + 1, values.get(i));
+            }
+            return stmt;
+        } catch (SQLException e) {
+            throw new DLException(e, "Prepare failed for: " + sql);
+        }
+    }
+
+    /**
+     * Executes a query with bound values and returns results as a 2D array.
+     * @param sql The SQL statement string.
+     * @param values The values to bind.
+     * @return A 2D array of strings where the first row is column names, or null on failure.
+     */
+    public String[][] getData(String sql, ArrayList<String> values) {
+        try {
+            PreparedStatement stmt = prepare(sql, values);
+            ResultSet rs = stmt.executeQuery();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            ArrayList<String[]> rows = new ArrayList<>();
+
+            // Add headers
+            String[] headers = new String[columnCount];
+            for (int i = 1; i <= columnCount; i++) {
+                headers[i - 1] = metaData.getColumnName(i);
+            }
+            rows.add(headers);
+
+            // Add data rows
+            while (rs.next()) {
+                String[] row = new String[columnCount];
+                for (int i = 1; i <= columnCount; i++) {
+                    row[i - 1] = rs.getString(i);
+                }
+                rows.add(row);
+            }
+
+            rs.close();
+            stmt.close();
+
+            return rows.toArray(new String[0][]);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Executes an update/insert/delete with bound values.
+     * @param sql The SQL statement string.
+     * @param values The values to bind.
+     * @return true if successful, false otherwise.
+     * @throws DLException if something goes wrong.
+     */
+    public boolean setData(String sql, ArrayList<String> values) throws DLException {
+        try {
+            PreparedStatement stmt = prepare(sql, values);
+            int result = stmt.executeUpdate();
+            stmt.close();
+            return result >= 0;
+        } catch (SQLException e) {
+            throw new DLException(e, "setData failed for: " + sql);
+        }
+    }
+
+    /**
+     * Executes a stored procedure that returns a single integer.
+     * @param procName The name of the stored procedure.
+     * @param values The values to bind.
+     * @return The integer result from the procedure.
+     * @throws DLException if something goes wrong.
+     */
+    public int executeProc(String procName, ArrayList<String> values) throws DLException {
+        StringBuilder sql = new StringBuilder("{call ").append(procName).append("(");
+        for (int i = 0; i < values.size(); i++) {
+            sql.append("?");
+            if (i < values.size() - 1) sql.append(",");
+        }
+        sql.append(")}");
+
+        try (java.sql.CallableStatement stmt = this.connection.prepareCall(sql.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                stmt.setString(i + 1, values.get(i));
+            }
+
+            // Execute and try to get a single integer result
+            boolean hasResults = stmt.execute();
+            if (hasResults) {
+                try (ResultSet rs = stmt.getResultSet()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+            return -1;
+        } catch (SQLException e) {
+            throw new DLException(e, "executeProc failed for: " + procName);
+        }
+    }
 }

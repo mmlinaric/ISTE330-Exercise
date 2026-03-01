@@ -116,6 +116,69 @@ public class Main {
                 System.out.println("\n--- Test 13: printResultInfo ---");
                 db.printResultInfo("SELECT * FROM equipment WHERE EquipmentCapacity > 10");
 
+                // --- Bonus: Create a stored procedure for testing ---
+                System.out.println("\n--- Bonus: Creating stored procedure 'getEquipmentCount' ---");
+                try {
+                    db.setData("DROP PROCEDURE IF EXISTS getEquipmentCount");
+                    db.setData("CREATE PROCEDURE getEquipmentCount() BEGIN SELECT COUNT(*) FROM equipment; END");
+                    System.out.println("Stored procedure created successfully.");
+                } catch (Exception e) {
+                    System.err.println("Failed to create stored procedure: " + e.getMessage());
+                }
+
+                // --- Test 14: fetchP (Prepared Statement Fetch) ---
+                System.out.println("\n--- Test 14: fetchP (Prepared Statement Fetch) ---");
+                Equipment equipmentP = new Equipment(568);
+                equipmentP.setDb(db);
+                if (equipmentP.fetchP()) {
+                    System.out.println("Equipment fetched successfully using fetchP:");
+                    equipmentP.printEquipment();
+                } else {
+                    System.out.println("No equipment found for the given ID.");
+                }
+
+                // --- Test 15: postP (Prepared Statement Insert) ---
+                System.out.println("\n--- Test 15: postP (Prepared Statement Insert) ---");
+                Equipment equipmentPostP = new Equipment(8888, "Prepared Vehicle", "Inserted via postP", 100);
+                equipmentPostP.setDb(db);
+                if (equipmentPostP.postP()) {
+                    System.out.println("Equipment inserted successfully using postP.");
+                }
+
+                // --- Test 16: putP (Prepared Statement Update) ---
+                System.out.println("\n--- Test 16: putP (Prepared Statement Update) ---");
+                equipmentPostP.setEquipmentName("Updated Prepared Vehicle");
+                if (equipmentPostP.putP()) {
+                    System.out.println("Equipment updated successfully using putP.");
+                }
+
+                // --- Test 17: removeP (Prepared Statement Delete) ---
+                System.out.println("\n--- Test 17: removeP (Prepared Statement Delete) ---");
+                if (equipmentPostP.removeP()) {
+                    System.out.println("Equipment removed successfully using removeP.");
+                }
+
+                // --- Test 18: getData with ArrayList<String> (2D Array Return) ---
+                System.out.println("\n--- Test 18: getData (2D Array Return) with Prepared Parameters ---");
+                ArrayList<String> queryParams = new ArrayList<>();
+                queryParams.add("40");
+                String[][] data2D = db.getData("SELECT * FROM equipment WHERE EquipmentCapacity > ?", queryParams);
+                if (data2D != null) {
+                    for (String[] row : data2D) {
+                        for (String col : row) {
+                            System.out.print(col + "\t");
+                        }
+                        System.out.println();
+                    }
+                } else {
+                    System.out.println("getData returned null.");
+                }
+
+                // --- Test 19: executeProc (Call Stored Procedure) ---
+                System.out.println("\n--- Test 19: executeProc (Call Stored Procedure) ---");
+                int count = db.executeProc("getEquipmentCount", new ArrayList<>());
+                System.out.println("Result from stored procedure 'getEquipmentCount': " + count);
+
                 if (db.close()) {
                     System.out.println("\nSuccessfully closed the database connection!");
                 }

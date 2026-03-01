@@ -124,6 +124,73 @@ public class Equipment {
         }
     }
 
+    // fetchP: retrieves database values using prepared statements
+    public boolean fetchP() throws DLException {
+        try {
+            String sql = "SELECT EquipID, EquipmentName, EquipmentDescription, EquipmentCapacity FROM equipment WHERE EquipID = ?";
+            ArrayList<String> values = new ArrayList<>();
+            values.add(String.valueOf(this.equipmentId));
+            
+            String[][] result = db.getData(sql, values);
+
+            if (result == null || result.length < 2) {
+                System.out.println("No equipment found with ID: " + this.equipmentId);
+                return false;
+            }
+
+            String[] row = result[1];
+            this.equipmentId = Integer.parseInt(row[0]);
+            this.equipmentName = row[1];
+            this.equipmentDescription = row[2];
+            this.equipmentCapacity = Integer.parseInt(row[3]);
+            return true;
+        } catch (Exception e) {
+            throw new DLException(e, "Method: fetchP", "EquipID: " + this.equipmentId);
+        }
+    }
+
+    // putP: updates the database row using prepared statements
+    public boolean putP() throws DLException {
+        try {
+            String sql = "UPDATE equipment SET EquipmentName = ?, EquipmentDescription = ?, EquipmentCapacity = ? WHERE EquipID = ?";
+            ArrayList<String> values = new ArrayList<>();
+            values.add(this.equipmentName);
+            values.add(this.equipmentDescription);
+            values.add(String.valueOf(this.equipmentCapacity));
+            values.add(String.valueOf(this.equipmentId));
+            return db.setData(sql, values);
+        } catch (Exception e) {
+            throw new DLException(e, "Method: putP", "EquipID: " + this.equipmentId);
+        }
+    }
+
+    // postP: inserts a new row using prepared statements
+    public boolean postP() throws DLException {
+        try {
+            String sql = "INSERT INTO equipment (EquipID, EquipmentName, EquipmentDescription, EquipmentCapacity) VALUES (?, ?, ?, ?)";
+            ArrayList<String> values = new ArrayList<>();
+            values.add(String.valueOf(this.equipmentId));
+            values.add(this.equipmentName);
+            values.add(this.equipmentDescription);
+            values.add(String.valueOf(this.equipmentCapacity));
+            return db.setData(sql, values);
+        } catch (Exception e) {
+            throw new DLException(e, "Method: postP", "EquipID: " + this.equipmentId);
+        }
+    }
+
+    // removeP: deletes the database row using prepared statements
+    public boolean removeP() throws DLException {
+        try {
+            String sql = "DELETE FROM equipment WHERE EquipID = ?";
+            ArrayList<String> values = new ArrayList<>();
+            values.add(String.valueOf(this.equipmentId));
+            return db.setData(sql, values);
+        } catch (Exception e) {
+            throw new DLException(e, "Method: removeP", "EquipID: " + this.equipmentId);
+        }
+    }
+
     // Utility method to display equipment values to the user
     public void printEquipment() {
         System.out.println("  Equipment ID:          " + equipmentId);
