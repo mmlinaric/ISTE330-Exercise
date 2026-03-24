@@ -191,6 +191,53 @@ public class Equipment {
         }
     }
 
+    // swapEquipment: swaps the name and capacity of this equipment with another identified by id
+    public boolean swapEquipment(int otherId) throws DLException {
+        String originalName = this.equipmentName;
+        int originalCapacity = this.equipmentCapacity;
+
+        try {
+            db.startTrn();
+
+            Equipment other = new Equipment(otherId);
+            other.setDb(db);
+            if (!other.fetchP()) {
+                db.rollbackTrn();
+                System.out.println("No equipment found with ID: " + otherId + ". Rolling back.");
+                return false;
+            }
+
+            // Swap names and capacities in memory
+            this.equipmentName = other.getEquipmentName();
+            this.equipmentCapacity = other.getEquipmentCapacity();
+            other.setEquipmentName(originalName);
+            other.setEquipmentCapacity(originalCapacity);
+
+            boolean thisUpdated = this.putP();
+            boolean otherUpdated = other.putP();
+
+            if (thisUpdated && otherUpdated) {
+                db.endTrn();
+                return true;
+            } else {
+                db.rollbackTrn();
+                this.equipmentName = originalName;
+                this.equipmentCapacity = originalCapacity;
+                System.out.println("Update failed. Rolling back.");
+                return false;
+            }
+        } catch (DLException e) {
+            try {
+                db.rollbackTrn();
+            } catch (DLException re) {
+                System.err.println("Rollback also failed: " + re.getMessage());
+            }
+            this.equipmentName = originalName;
+            this.equipmentCapacity = originalCapacity;
+            throw e;
+        }
+    }
+
     // Utility method to display equipment values to the user
     public void printEquipment() {
         System.out.println("  Equipment ID:          " + equipmentId);

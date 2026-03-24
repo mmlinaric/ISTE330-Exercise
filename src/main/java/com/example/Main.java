@@ -179,6 +179,49 @@ public class Main {
                 int count = db.executeProc("getEquipmentCount", new ArrayList<>());
                 System.out.println("Result from stored procedure 'getEquipmentCount': " + count);
 
+                // --- Test 20: swapEquipment within a transaction ---
+                System.out.println("\n--- Test 20: swapEquipment (Transaction) ---");
+
+                // Step 3: Fetch both equipment objects and display initial values
+                Equipment swap1 = new Equipment(568);
+                swap1.setDb(db);
+                Equipment swap2 = new Equipment(894);
+                swap2.setDb(db);
+
+                System.out.println("\nBefore swap:");
+                if (swap1.fetchP()) {
+                    System.out.println("Equipment 1 (ID 568):");
+                    swap1.printEquipment();
+                } else {
+                    System.out.println("Equipment 1 (ID 568) not found.");
+                }
+                if (swap2.fetchP()) {
+                    System.out.println("Equipment 2 (ID 894):");
+                    swap2.printEquipment();
+                } else {
+                    System.out.println("Equipment 2 (ID 894) not found.");
+                }
+
+                // Step 4: Perform the swap (transaction is managed inside swapEquipment)
+                System.out.println("\nSwapping equipment 568 with equipment 894...");
+                boolean swapped = swap1.swapEquipment(swap2.getEquipmentId());
+                if (swapped) {
+                    System.out.println("Swap succeeded.");
+                } else {
+                    System.out.println("Swap failed or was rolled back.");
+                }
+
+                // Step 5: Fetch both again and display updated values
+                System.out.println("\nAfter swap:");
+                if (swap1.fetchP()) {
+                    System.out.println("Equipment 1 (ID 568):");
+                    swap1.printEquipment();
+                }
+                if (swap2.fetchP()) {
+                    System.out.println("Equipment 2 (ID 894):");
+                    swap2.printEquipment();
+                }
+
                 if (db.close()) {
                     System.out.println("\nSuccessfully closed the database connection!");
                 }

@@ -290,6 +290,32 @@ public class MySQLDatabase {
         }
     }
 
+    public void startTrn() throws DLException {
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new DLException(e, "Failed to start transaction");
+        }
+    }
+
+    public void endTrn() throws DLException {
+        try {
+            connection.commit();
+            connection.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new DLException(e, "Failed to commit transaction");
+        }
+    }
+
+    public void rollbackTrn() throws DLException {
+        try {
+            connection.rollback();
+            connection.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new DLException(e, "Failed to rollback transaction");
+        }
+    }
+
     /**
      * Executes a stored procedure that returns a single integer.
      * @param procName The name of the stored procedure.
