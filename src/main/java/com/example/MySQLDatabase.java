@@ -6,9 +6,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class MySQLDatabase {
+    private static int failedLoginAttempts = 0;
+    private static final int MAX_FAILED_LOGINS = 3;
+
     private String host;
     private int port;
     private String database;
@@ -349,5 +354,37 @@ public class MySQLDatabase {
         } catch (SQLException e) {
             throw new DLException(e, "executeProc failed for: " + procName);
         }
+    }
+
+     /**
+     * Authenticates a user by userId and plaintext password.
+     * On success, returns a fully populated User object (name, role, organization unit).
+     * On failure, prints a message, logs the attempt, and terminates the app after
+     * MAX_FAILED_LOGINS consecutive failures.
+     */
+    public User login(String userId, String password) throws DLException {
+        User user = new User(userId, password);
+        boolean authenticated = user.authenticate(this);
+
+        if (authenticated) {
+            failedLoginAttempts = 0;
+            return user;
+        }
+
+        failedLoginAttempts++;
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        System.out.println("Authentication failed for user: " + userId);
+        System.err.println("[LOGIN FAILURE] " + timestamp + " - UserId: " + userId
+                + " | Attempt #" + failedLoginAttempts);
+
+        if (failedLoginAttempts >= MAX_FAILED_LOGINS) {
+            System.out.println("Too many failed login attempts (" + failedLoginAttempts
+                    + "). Access is blocked. Terminating application.");
+            System.exit(1);
+        }
+
+        System.out.println("Failed login attempts: " + failedLoginAttempts
+                + " / " + MAX_FAILED_LOGINS + ". Please try again.");
+        return null;
     }
 }

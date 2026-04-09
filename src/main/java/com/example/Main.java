@@ -222,9 +222,126 @@ public class Main {
                     swap2.printEquipment();
                 }
 
+                // =====================================================================
+                // Tests 21-28: User authentication and authorized Equipment operations
+                // =====================================================================
+
+                // --- Test 21: Login with valid Admin credentials ---
+                System.out.println("\n--- Test 21: Login – valid Admin credentials ---");
+                User adminUser = db.login("admin@rit.edu", "admin123");
+                if (adminUser != null) {
+                    System.out.println("Admin login successful:");
+                    adminUser.printUser();
+                }
+
+                // --- Test 22: Admin can perform all four authorized operations ---
+                System.out.println("\n--- Test 22: Admin fetchA / postA / putA / removeA ---");
+                Equipment adminEquip = new Equipment(7777, "Admin Vehicle", "Inserted by Admin", 200);
+                adminEquip.setDb(db);
+
+                System.out.print("  postA  -> ");
+                System.out.println(adminEquip.postA(adminUser) ? "SUCCESS (inserted)" : "FAILED");
+
+                System.out.print("  fetchA -> ");
+                System.out.println(adminEquip.fetchA(adminUser) ? "SUCCESS" : "FAILED");
+
+                adminEquip.setEquipmentName("Admin Vehicle Updated");
+                System.out.print("  putA   -> ");
+                System.out.println(adminEquip.putA(adminUser) ? "SUCCESS (updated)" : "FAILED");
+
+                System.out.print("  removeA -> ");
+                System.out.println(adminEquip.removeA(adminUser) ? "SUCCESS (deleted)" : "FAILED");
+
+                // --- Test 23: Login with valid Editor credentials ---
+                System.out.println("\n--- Test 23: Login – valid Editor credentials ---");
+                User editorUser = db.login("editor@rit.edu", "editor123");
+                if (editorUser != null) {
+                    System.out.println("Editor login successful:");
+                    editorUser.printUser();
+                }
+
+                // --- Test 24: Editor can fetch/put/post but NOT remove ---
+                System.out.println("\n--- Test 24: Editor fetchA / postA / putA / removeA ---");
+                Equipment editorEquip = new Equipment(6666, "Editor Vehicle", "Inserted by Editor", 80);
+                editorEquip.setDb(db);
+
+                System.out.print("  postA   -> ");
+                System.out.println(editorEquip.postA(editorUser) ? "SUCCESS (inserted)" : "FAILED");
+
+                System.out.print("  fetchA  -> ");
+                System.out.println(editorEquip.fetchA(editorUser) ? "SUCCESS" : "FAILED");
+
+                editorEquip.setEquipmentName("Editor Vehicle Updated");
+                System.out.print("  putA    -> ");
+                System.out.println(editorEquip.putA(editorUser) ? "SUCCESS (updated)" : "FAILED");
+
+                System.out.print("  removeA -> ");
+                boolean editorRemove = editorEquip.removeA(editorUser);
+                System.out.println(editorRemove ? "SUCCESS" : "DENIED (expected for Editor)");
+
+                // Clean up editor's test record using a direct method
+                if (!editorRemove) editorEquip.removeP();
+
+                // --- Test 25: Login with valid General credentials ---
+                System.out.println("\n--- Test 25: Login – valid General credentials ---");
+                User generalUser = db.login("user@rit.edu", "user123");
+                if (generalUser != null) {
+                    System.out.println("General login successful:");
+                    generalUser.printUser();
+                }
+
+                // --- Test 26: General can only fetch ---
+                System.out.println("\n--- Test 26: General fetchA / postA / putA / removeA ---");
+                Equipment generalEquip = new Equipment(568);
+                generalEquip.setDb(db);
+
+                System.out.print("  fetchA  -> ");
+                System.out.println(generalEquip.fetchA(generalUser) ? "SUCCESS" : "FAILED");
+
+                System.out.print("  postA   -> ");
+                Equipment generalPost = new Equipment(5555, "General Vehicle", "Should not insert", 10);
+                generalPost.setDb(db);
+                System.out.println(generalPost.postA(generalUser) ? "SUCCESS" : "DENIED (expected for General)");
+
+                System.out.print("  putA    -> ");
+                System.out.println(generalEquip.putA(generalUser) ? "SUCCESS" : "DENIED (expected for General)");
+
+                System.out.print("  removeA -> ");
+                System.out.println(generalEquip.removeA(generalUser) ? "SUCCESS" : "DENIED (expected for General)");
+
+                // --- Test 27: Unauthenticated user is denied all operations ---
+                System.out.println("\n--- Test 27: Unauthenticated user denied all operations ---");
+                User unauthUser = new User("ghost@rit.edu", "nope");
+                Equipment unauthEquip = new Equipment(568);
+                unauthEquip.setDb(db);
+
+                System.out.print("  fetchA with unauthenticated user -> ");
+                System.out.println(unauthEquip.fetchA(unauthUser) ? "SUCCESS" : "DENIED (expected)");
+
+                // --- Test 28: Login with invalid credentials ---
+                System.out.println("\n--- Test 28: Login with invalid credentials ---");
+                User invalidUser = db.login("nobody@rit.edu", "wrongpassword");
+                System.out.println(invalidUser == null ? "Login correctly returned null" : "Unexpected success");
+
                 if (db.close()) {
                     System.out.println("\nSuccessfully closed the database connection!");
                 }
+
+                // --- Test 29: Repeated failed logins terminate the application ---
+                // NOTE: A new DB connection is needed because we closed it above.
+                // This test will call System.exit(1) on the 3rd failed attempt.
+                System.out.println("\n--- Test 29: Repeated failed logins (app terminates after 3rd failure) ---");
+                MySQLDatabase db2 = new MySQLDatabase(
+                        System.getenv("DB_HOST"),
+                        Integer.parseInt(System.getenv("DB_PORT")),
+                        System.getenv("DB_NAME"),
+                        System.getenv("DB_USER"),
+                        System.getenv("DB_PASSWORD"));
+                db2.connect();
+                db2.login("nobody@rit.edu", "wrong1");  // Failure 2 (1 already counted above)
+                db2.login("nobody@rit.edu", "wrong2");  // Failure 3 – app terminates here
+                System.out.println("This line should never be reached.");
+
             } else {
                 System.out.println("Failed to connect to the database.");
             }

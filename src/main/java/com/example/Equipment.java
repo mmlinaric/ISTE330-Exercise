@@ -238,6 +238,68 @@ public class Equipment {
         }
     }
 
+    // --- Authorization-aware CRUD methods ---
+
+    /**
+     * Checks whether the given user is authenticated and authorized to perform the action.
+     * Prints an appropriate denial message and returns false when access is not permitted.
+     *
+     * Role permissions:
+     *   Admin  – fetch, put, post, remove
+     *   Editor – fetch, put, post
+     *   General – fetch only
+     */
+    private boolean isAuthorized(User user, String action) {
+        if (user == null || !user.isAuthenticated()) {
+            System.out.println("Access denied: user is not authenticated.");
+            return false;
+        }
+        String role = user.getRole();
+        switch (role) {
+            case "Admin":
+                return true;
+            case "Editor":
+                if (action.equals("fetch") || action.equals("put") || action.equals("post")) {
+                    return true;
+                }
+                System.out.println("Access denied: 'Editor' role is not authorized to perform '" + action + "'.");
+                return false;
+            case "General":
+                if (action.equals("fetch")) {
+                    return true;
+                }
+                System.out.println("Access denied: 'General' role is not authorized to perform '" + action + "'.");
+                return false;
+            default:
+                System.out.println("Access denied: unknown role '" + role + "'.");
+                return false;
+        }
+    }
+
+    /** Authorized fetch – delegates to fetchP() if user is authenticated and has any role. */
+    public boolean fetchA(User user) throws DLException {
+        if (!isAuthorized(user, "fetch")) return false;
+        return fetchP();
+    }
+
+    /** Authorized put – delegates to putP() if user is Admin or Editor. */
+    public boolean putA(User user) throws DLException {
+        if (!isAuthorized(user, "put")) return false;
+        return putP();
+    }
+
+    /** Authorized post – delegates to postP() if user is Admin or Editor. */
+    public boolean postA(User user) throws DLException {
+        if (!isAuthorized(user, "post")) return false;
+        return postP();
+    }
+
+    /** Authorized remove – delegates to removeP() only if user is Admin. */
+    public boolean removeA(User user) throws DLException {
+        if (!isAuthorized(user, "remove")) return false;
+        return removeP();
+    }
+
     // Utility method to display equipment values to the user
     public void printEquipment() {
         System.out.println("  Equipment ID:          " + equipmentId);

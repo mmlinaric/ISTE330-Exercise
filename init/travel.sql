@@ -315,3 +315,44 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2011-11-30  9:45:21
+
+--
+-- Table structure for table `userrole` and `user`
+-- Drop `user` first because it has a FK to `userrole`
+--
+
+DROP TABLE IF EXISTS `user`;
+DROP TABLE IF EXISTS `userrole`;
+
+CREATE TABLE `userrole` (
+  `RoleID` int(11) NOT NULL AUTO_INCREMENT,
+  `RoleName` varchar(20) NOT NULL,
+  PRIMARY KEY (`RoleID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+LOCK TABLES `userrole` WRITE;
+INSERT INTO `userrole` VALUES (1,'General'),(2,'Editor'),(3,'Admin');
+UNLOCK TABLES;
+
+CREATE TABLE `user` (
+  `UserId` varchar(100) NOT NULL,
+  `FirstName` varchar(50) NOT NULL,
+  `LastName` varchar(50) NOT NULL,
+  `Password` varchar(64) NOT NULL,
+  `RoleID` int(11) NOT NULL,
+  `OrganizationUnit` varchar(100) NOT NULL,
+  PRIMARY KEY (`UserId`),
+  KEY `RoleID` (`RoleID`),
+  CONSTRAINT `user_ibfk_1` FOREIGN KEY (`RoleID`) REFERENCES `userrole` (`RoleID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Passwords are stored as SHA-256 hashes (64 hex chars)
+-- admin@rit.edu  / admin123
+-- editor@rit.edu / editor123
+-- user@rit.edu   / user123
+LOCK TABLES `user` WRITE;
+INSERT INTO `user` VALUES
+  ('admin@rit.edu','Admin','User',SHA2('admin123',256),3,'RIT Administration'),
+  ('editor@rit.edu','Editor','User',SHA2('editor123',256),2,'RIT Croatia'),
+  ('user@rit.edu','General','User',SHA2('user123',256),1,'RIT Croatia');
+UNLOCK TABLES;
